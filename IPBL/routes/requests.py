@@ -29,7 +29,7 @@ def create_request(current_user):
         existing = db.execute(
             """
             SELECT id FROM swap_requests 
-            WHERE sender_id = %s AND receiver_id = %s AND skill_id = %s AND status = 'pending'
+            WHERE sender_id = ? AND receiver_id = ? AND skill_id = ? AND status = 'pending'
         """,
             (sender_id, receiver_id, skill_id),
         ).fetchone()
@@ -41,7 +41,7 @@ def create_request(current_user):
         db.execute(
             """
             INSERT INTO swap_requests (sender_id, receiver_id, skill_id, message)
-            VALUES (%s, %s, %s, %s)
+            VALUES (?, ?, ?, ?)
         """,
             (sender_id, receiver_id, skill_id, message),
         )
@@ -72,7 +72,7 @@ def get_requests(current_user):
             FROM swap_requests r
             JOIN users u ON r.sender_id = u.id
             JOIN skills s ON r.skill_id = s.id
-            WHERE r.receiver_id = %s
+            WHERE r.receiver_id = ?
             ORDER BY r.created_at DESC
         """,
             (user_id,),
@@ -88,7 +88,7 @@ def get_requests(current_user):
             FROM swap_requests r
             JOIN users u ON r.receiver_id = u.id
             JOIN skills s ON r.skill_id = s.id
-            WHERE r.sender_id = %s
+            WHERE r.sender_id = ?
             ORDER BY r.created_at DESC
         """,
             (user_id,),
@@ -133,7 +133,7 @@ def update_status(current_user, request_id):
 
         # Get request
         req = db.execute(
-            "SELECT * FROM swap_requests WHERE id = %s", (request_id,)
+            "SELECT * FROM swap_requests WHERE id = ?", (request_id,)
         ).fetchone()
 
         if not req:
@@ -152,7 +152,7 @@ def update_status(current_user, request_id):
 
         # Update status
         db.execute(
-            "UPDATE swap_requests SET status = %s WHERE id = %s",
+            "UPDATE swap_requests SET status = ? WHERE id = ?",
             (new_status, request_id),
         )
         db.commit()

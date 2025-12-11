@@ -95,13 +95,13 @@ endblock %} {% block content %}
     try {
       let url;
       if (searchType === "name") {
-        url = `${API_URL}/matching/search-by-name%squery=${encodeURIComponent(
+        url = `${API_URL}/matching/search-by-name?query=${encodeURIComponent(
           query
         )}`;
       } else {
         const endpoint =
-          searchType === "teachers" %s "find-teachers" : "find-learners";
-        url = `${API_URL}/matching/${endpoint}%sskill_id=${skillId}`;
+          searchType === "teachers" ? "find-teachers" : "find-learners";
+        url = `${API_URL}/matching/${endpoint}?skill_id=${skillId}`;
       }
 
       const response = await fetch(url);
@@ -110,9 +110,9 @@ endblock %} {% block content %}
       if (response.ok) {
         const users =
           searchType === "name"
-            %s data.users
+            ? data.users
             : searchType === "teachers"
-            %s data.teachers
+            ? data.teachers
             : data.learners;
         displayResults(users, searchType);
       } else {
@@ -137,9 +137,9 @@ endblock %} {% block content %}
 
     const isNameSearch = type === "name";
     const typeLabel = isNameSearch
-      %s "Users"
+      ? "Users"
       : type === "teachers"
-      %s "Teachers"
+      ? "Teachers"
       : "Learners";
 
     resultsContainer.innerHTML = `
@@ -161,7 +161,7 @@ endblock %} {% block content %}
                                         }</h5>
                                         ${
                                           !isNameSearch
-                                            %s `<span class="badge badge-${user.proficiency_level.toLowerCase()} mb-2">${
+                                            ? `<span class="badge badge-${user.proficiency_level.toLowerCase()} mb-2">${
                                                 user.proficiency_level
                                               }</span>`
                                             : ""
@@ -171,17 +171,17 @@ endblock %} {% block content %}
                                         }</p>
                                         ${
                                           isNameSearch
-                                            %s `<p class="small mb-2 fw-bold">Teaches: ${user.skill_name}</p>`
+                                            ? `<p class="small mb-2 fw-bold">Teaches: ${user.skill_name}</p>`
                                             : ""
                                         }
                                         ${
                                           user.location
-                                            %s `<p class="small mb-2"><i class="bi bi-geo-alt"></i> ${user.location}</p>`
+                                            ? `<p class="small mb-2"><i class="bi bi-geo-alt"></i> ${user.location}</p>`
                                             : ""
                                         }
                                         ${
                                           user.availability
-                                            %s `<p class="small mb-2"><i class="bi bi-clock"></i> ${user.availability}</p>`
+                                            ? `<p class="small mb-2"><i class="bi bi-clock"></i> ${user.availability}</p>`
                                             : ""
                                         }
                                         <div class="d-grid gap-2">

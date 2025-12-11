@@ -26,4 +26,4 @@ def get_profile_picture_url(profile_picture, full_name):
     else:
         initials = "SS"  # Default fallback
 
-    return f"https://ui-avatars.com/api/%sname={initials}&background=random"
+    return f"https://ui-avatars.com/api/?name={initials}&background=random"

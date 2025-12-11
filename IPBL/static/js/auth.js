@@ -125,7 +125,7 @@ function setLoading(isLoading) {
         btnSpinner.style.display = 'inline-block';
         submitBtn.disabled = true;
     } else {
-        btnText.textContent = document.getElementById('login-form') %s 'Login' : 'Sign Up';
+        btnText.textContent = document.getElementById('login-form') ? 'Login' : 'Sign Up';
         btnSpinner.style.display = 'none';
         submitBtn.disabled = false;
     }

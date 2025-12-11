@@ -13,7 +13,7 @@ def get_profile(user_id):
 
         # Get user info
         user = db.execute(
-            "SELECT id, email, full_name, bio, profile_picture, location, availability, created_at FROM users WHERE id = %s",
+            "SELECT id, email, full_name, bio, profile_picture, location, availability, created_at FROM users WHERE id = ?",
             (user_id,),
         ).fetchone()
 
@@ -26,7 +26,7 @@ def get_profile(user_id):
             SELECT s.id, s.name, s.category, us.proficiency_level
             FROM skills s
             JOIN user_skills us ON s.id = us.skill_id
-            WHERE us.user_id = %s AND us.is_teaching = 1
+            WHERE us.user_id = ? AND us.is_teaching = 1
         """,
             (user_id,),
         ).fetchall()
@@ -37,7 +37,7 @@ def get_profile(user_id):
             SELECT s.id, s.name, s.category, us.proficiency_level
             FROM skills s
             JOIN user_skills us ON s.id = us.skill_id
-            WHERE us.user_id = %s AND us.is_learning = 1
+            WHERE us.user_id = ? AND us.is_learning = 1
         """,
             (user_id,),
         ).fetchall()
@@ -54,7 +54,7 @@ def get_profile(user_id):
             else:
                 initials = "SS"
             profile_pic = (
-                f"https://ui-avatars.com/api/%sname={initials}&background=random"
+                f"https://ui-avatars.com/api/?name={initials}&background=random"
             )
 
         return (
@@ -133,26 +133,26 @@ def update_profile(current_user):
                 file.save(os.path.join(upload_folder, unique_filename))
 
                 # Update DB path
-                update_fields.append("profile_picture = %s")
+                update_fields.append("profile_picture = ?")
                 params.append(f"/{upload_folder}/{unique_filename}")
 
         # Build update query dynamically
         # update_fields and params are already initialized above
 
         if full_name:
-            update_fields.append("full_name = %s")
+            update_fields.append("full_name = ?")
             params.append(full_name)
 
         if bio is not None:
-            update_fields.append("bio = %s")
+            update_fields.append("bio = ?")
             params.append(bio)
 
         if location:
-            update_fields.append("location = %s")
+            update_fields.append("location = ?")
             params.append(location)
 
         if availability:
-            update_fields.append("availability = %s")
+            update_fields.append("availability = ?")
             params.append(availability)
 
         if not update_fields:
@@ -163,13 +163,13 @@ def update_profile(current_user):
 
         # Update user
         db = get_db()
-        query = f"UPDATE users SET {', '.join(update_fields)} WHERE id = %s"
+        query = f"UPDATE users SET {', '.join(update_fields)} WHERE id = ?"
         db.execute(query, params)
         db.commit()
 
         # Fetch updated user
         updated_user = db.execute(
-            "SELECT id, email, full_name, bio, profile_picture, location, availability FROM users WHERE id = %s",
+            "SELECT id, email, full_name, bio, profile_picture, location, availability FROM users WHERE id = ?",
             (user_id,),
         ).fetchone()
 
@@ -210,15 +210,13 @@ def add_skill(current_user):
         db = get_db()
 
         # Check if skill exists
-        skill = db.execute(
-            "SELECT id FROM skills WHERE id = %s", (skill_id,)
-        ).fetchone()
+        skill = db.execute("SELECT id FROM skills WHERE id = ?", (skill_id,)).fetchone()
         if not skill:
             return jsonify({"error": "Skill not found"}), 404
 
         # Check if user already has this skill
         existing = db.execute(
-            "SELECT id FROM user_skills WHERE user_id = %s AND skill_id = %s",
+            "SELECT id FROM user_skills WHERE user_id = ? AND skill_id = ?",
             (user_id, skill_id),
         ).fetchone()
 
@@ -227,8 +225,8 @@ def add_skill(current_user):
             db.execute(
                 """
                 UPDATE user_skills 
-                SET proficiency_level = %s, is_teaching = %s, is_learning = %s
-                WHERE user_id = %s AND skill_id = %s
+                SET proficiency_level = ?, is_teaching = ?, is_learning = ?
+                WHERE user_id = ? AND skill_id = ?
             """,
                 (proficiency_level, is_teaching, is_learning, user_id, skill_id),
             )
@@ -237,7 +235,7 @@ def add_skill(current_user):
             db.execute(
                 """
                 INSERT INTO user_skills (user_id, skill_id, proficiency_level, is_teaching, is_learning)
-                VALUES (%s, %s, %s, %s, %s)
+                VALUES (?, ?, ?, ?, ?)
             """,
                 (user_id, skill_id, proficiency_level, is_teaching, is_learning),
             )
@@ -259,7 +257,7 @@ def remove_skill(current_user, skill_id):
 
         db = get_db()
         db.execute(
-            "DELETE FROM user_skills WHERE user_id = %s AND skill_id = %s",
+            "DELETE FROM user_skills WHERE user_id = ? AND skill_id = ?",
             (user_id, skill_id),
         )
         db.commit()

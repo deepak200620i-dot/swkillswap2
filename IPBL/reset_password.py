@@ -7,7 +7,7 @@ def reset_password(email, new_password):
     password_hash = hash_password(new_password)
 
     db.execute(
-        "UPDATE users SET password_hash = %s WHERE email = %s", (password_hash, email)
+        "UPDATE users SET password_hash = ? WHERE email = ?", (password_hash, email)
     )
     db.commit()
     print(f"Password for {email} reset successfully.")

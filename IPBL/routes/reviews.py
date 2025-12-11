@@ -31,7 +31,7 @@ def create_review(current_user):
 
         # Verify request exists and is completed
         req = db.execute(
-            "SELECT * FROM swap_requests WHERE id = %s", (request_id,)
+            "SELECT * FROM swap_requests WHERE id = ?", (request_id,)
         ).fetchone()
 
         if not req:
@@ -52,7 +52,7 @@ def create_review(current_user):
         existing = db.execute(
             """
             SELECT id FROM reviews 
-            WHERE request_id = %s AND reviewer_id = %s
+            WHERE request_id = ? AND reviewer_id = ?
         """,
             (request_id, reviewer_id),
         ).fetchone()
@@ -64,7 +64,7 @@ def create_review(current_user):
         db.execute(
             """
             INSERT INTO reviews (reviewer_id, reviewed_id, request_id, rating, comment)
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES (?, ?, ?, ?, ?)
         """,
             (reviewer_id, reviewed_id, request_id, rating, comment),
         )
@@ -90,7 +90,7 @@ def get_user_reviews(user_id):
                 u.full_name as reviewer_name, u.profile_picture as reviewer_pic
             FROM reviews r
             JOIN users u ON r.reviewer_id = u.id
-            WHERE r.reviewed_id = %s
+            WHERE r.reviewed_id = ?
             ORDER BY r.created_at DESC
         """,
             (user_id,),
@@ -101,7 +101,7 @@ def get_user_reviews(user_id):
             """
             SELECT AVG(rating) as avg_rating, COUNT(*) as count
             FROM reviews
-            WHERE reviewed_id = %s
+            WHERE reviewed_id = ?
         """,
             (user_id,),
         ).fetchone()

@@ -21,8 +21,8 @@ def check_notifications(current_user):
             SELECT COUNT(*) as count
             FROM messages m
             JOIN conversations c ON m.conversation_id = c.id
-            WHERE (c.user1_id = %s OR c.user2_id = %s)
-            AND m.sender_id != %s
+            WHERE (c.user1_id = ? OR c.user2_id = ?)
+            AND m.sender_id != ?
             AND m.is_read = 0
         """,
             (user_id, user_id, user_id),
@@ -33,7 +33,7 @@ def check_notifications(current_user):
             """
             SELECT COUNT(*) as count
             FROM swap_requests
-            WHERE receiver_id = %s AND status = 'pending'
+            WHERE receiver_id = ? AND status = 'pending'
         """,
             (user_id,),
         ).fetchone()["count"]
@@ -47,8 +47,8 @@ def check_notifications(current_user):
                 FROM messages m
                 JOIN conversations c ON m.conversation_id = c.id
                 JOIN users u ON m.sender_id = u.id
-                WHERE (c.user1_id = %s OR c.user2_id = %s)
-                AND m.sender_id != %s
+                WHERE (c.user1_id = ? OR c.user2_id = ?)
+                AND m.sender_id != ?
                 AND m.is_read = 0
                 ORDER BY m.created_at DESC
                 LIMIT 1

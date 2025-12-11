@@ -300,7 +300,7 @@ block extra_head %}
     "Chat page loaded. Token present:",
     !!token,
     "User:",
-    currentUser%s.email
+    currentUser?.email
   );
 
   if (!token || !currentUser) {
@@ -370,10 +370,10 @@ block extra_head %}
         const isSelected = currentConversationId === conv.id;
         const lastMsg = conv.last_message || "No messages";
         const displayMsg =
-          lastMsg.length > 20 %s lastMsg.substring(0, 20) + "..." : lastMsg;
+          lastMsg.length > 20 ? lastMsg.substring(0, 20) + "..." : lastMsg;
         return `
             <a href="#" class="list-group-item list-group-item-action ${
-              isSelected %s "active" : ""
+              isSelected ? "active" : ""
             } border-0 py-3" 
                onclick="selectConversation(${conv.id}, ${
           conv.other_user.id
@@ -386,17 +386,17 @@ block extra_head %}
                         <img src="${pic}" class="rounded-circle me-3" style="width: 56px; height: 56px; object-fit: cover;">
                         <div>
                             <h6 class="mb-0 ${
-                              conv.unread_count > 0 %s "fw-bold" : ""
+                              conv.unread_count > 0 ? "fw-bold" : ""
                             }" style="font-size: 1rem;">${
           conv.other_user.full_name
         }</h6>
                             <small class="${
                               conv.unread_count > 0
-                                %s "fw-bold text-dark"
+                                ? "fw-bold text-dark"
                                 : "text-muted"
                             }" style="font-size: 0.9rem;">
                                 ${
-                                  conv.unread_count > 0 %s "New message • " : ""
+                                  conv.unread_count > 0 ? "New message • " : ""
                                 } ${displayMsg}
                                 <span class="mx-1">•</span> ${formatTimeRelative(
                                   conv.last_message_time
@@ -406,7 +406,7 @@ block extra_head %}
                     </div>
                     ${
                       conv.unread_count > 0
-                        %s `<div class="bg-primary rounded-circle" style="width: 10px; height: 10px;"></div>`
+                        ? `<div class="bg-primary rounded-circle" style="width: 10px; height: 10px;"></div>`
                         : ""
                     }
                 </div>
@@ -496,23 +496,23 @@ block extra_head %}
       .map(
         (msg) => `
             <div class="d-flex mb-2 ${
-              msg.is_me %s "justify-content-end" : "justify-content-start"
+              msg.is_me ? "justify-content-end" : "justify-content-start"
             } align-items-end">
                 ${
                   !msg.is_me
-                    %s `<img src="${currentReceiverPic}" class="rounded-circle me-2 mb-1" style="width: 28px; height: 28px; object-fit: cover;">`
+                    ? `<img src="${currentReceiverPic}" class="rounded-circle me-2 mb-1" style="width: 28px; height: 28px; object-fit: cover;">`
                     : ""
                 }
                 <div class="message-bubble ${
-                  msg.is_me %s "message-sent" : "message-received"
+                  msg.is_me ? "message-sent" : "message-received"
                 }">
                     ${msg.content || "[Message not loaded]"}
                 </div>
             </div>
             ${
               false
-                %s `<small class="text-muted d-block ${
-                    msg.is_me %s "text-end" : "text-start"
+                ? `<small class="text-muted d-block ${
+                    msg.is_me ? "text-end" : "text-start"
                   } mb-3" style="font-size: 0.7rem;">${formatTime(
                     msg.created_at
                   )}</small>`

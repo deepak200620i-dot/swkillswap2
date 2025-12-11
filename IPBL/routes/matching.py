@@ -26,7 +26,7 @@ def find_teachers():
             FROM users u
             JOIN user_skills us ON u.id = us.user_id
             JOIN skills s ON us.skill_id = s.id
-            WHERE us.skill_id = %s AND us.is_teaching = 1
+            WHERE us.skill_id = ? AND us.is_teaching = 1
             ORDER BY us.proficiency_level DESC, u.full_name
         """,
             (skill_id,),
@@ -68,7 +68,7 @@ def find_learners():
             FROM users u
             JOIN user_skills us ON u.id = us.user_id
             JOIN skills s ON us.skill_id = s.id
-            WHERE us.skill_id = %s AND us.is_learning = 1
+            WHERE us.skill_id = ? AND us.is_learning = 1
             ORDER BY u.full_name
         """,
             (skill_id,),
@@ -104,7 +104,7 @@ def get_recommendations():
             learning_skills = db.execute(
                 """
                 SELECT skill_id FROM user_skills
-                WHERE user_id = %s AND is_learning = 1
+                WHERE user_id = ? AND is_learning = 1
             """,
                 (user_id,),
             ).fetchall()
@@ -113,7 +113,7 @@ def get_recommendations():
                 return jsonify({"recommendations": []}), 200
 
             skill_ids = [skill["skill_id"] for skill in learning_skills]
-            placeholders = ",".join("%s" * len(skill_ids))
+            placeholders = ",".join("?" * len(skill_ids))
 
             # Find teachers for these skills
             recommendations = db.execute(
@@ -127,7 +127,7 @@ def get_recommendations():
                 JOIN skills s ON us.skill_id = s.id
                 WHERE us.skill_id IN ({placeholders})
                 AND us.is_teaching = 1
-                AND u.id != %s
+                AND u.id != ?
                 ORDER BY us.proficiency_level DESC, u.full_name
                 LIMIT 20
             """,
@@ -173,7 +173,7 @@ def search_by_name():
                  JOIN skills s ON us2.skill_id = s.id 
                  WHERE us2.user_id = u.id AND us2.is_teaching = 1) as teaching_skills
             FROM users u
-            WHERE u.full_name LIKE %s
+            WHERE u.full_name LIKE ?
             ORDER BY u.full_name
             LIMIT 50
         """,
