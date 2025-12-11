@@ -1,6 +1,7 @@
 import os
-import psycopg2
-import psycopg2.extras
+import psycopg
+from psycopg.rows import dict_row
+
 from flask import g
 
 # Render provides DATABASE_URL automatically
@@ -11,14 +12,8 @@ if not DATABASE_URL:
 
 
 def get_db():
-    """
-    Get a PostgreSQL connection.
-    Stored in Flask's g to reuse during request.
-    """
     if "db" not in g:
-        g.db = psycopg2.connect(
-            DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor
-        )
+        g.db = psycopg.connect(DATABASE_URL, row_factory=dict_row)
     return g.db
 
 
@@ -30,13 +25,7 @@ def close_db(e=None):
 
 
 def init_db():
-    """
-    Initialize database tables automatically on first startup.
-    Reads schema.sql and executes it on PostgreSQL.
-    Ignores errors if tables already exist.
-    """
     db = get_db()
-    cur = db.cursor()
 
     schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
 
@@ -44,11 +33,12 @@ def init_db():
         sql_script = f.read()
 
     try:
-        cur.execute(sql_script)
+        with db.cursor() as cur:
+            cur.execute(sql_script)
         db.commit()
-        print("✅ PostgreSQL schema initialized (or already existed).")
+        print("PostgreSQL schema initialized.")
     except Exception as e:
-        print(f"⚠️ Schema initialization skipped: {e}")
+        print(f"Schema error: {e}")
         db.rollback()
 
 
