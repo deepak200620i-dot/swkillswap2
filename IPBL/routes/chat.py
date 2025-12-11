@@ -20,10 +20,10 @@ def get_conversations(current_user):
                    u.id as other_user_id, u.full_name, u.profile_picture,
                    (SELECT content FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
                    (SELECT created_at FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_time,
-                   (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != ? AND is_read = 0) as unread_count
+                   (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != %s AND is_read = 0) as unread_count
             FROM conversations c
             JOIN users u ON (c.user1_id = u.id OR c.user2_id = u.id)
-            WHERE (c.user1_id = ? OR c.user2_id = ?) AND u.id != ?
+            WHERE (c.user1_id = %s OR c.user2_id = %s) AND u.id != %s
             ORDER BY c.updated_at DESC
         """
 
@@ -70,7 +70,7 @@ def get_messages(current_user, conversation_id):
 
         # Verify user is part of the conversation
         conv = db.execute(
-            "SELECT id FROM conversations WHERE id = ? AND (user1_id = ? OR user2_id = ?)",
+            "SELECT id FROM conversations WHERE id = %s AND (user1_id = %s OR user2_id = %s)",
             (conversation_id, user_id, user_id),
         ).fetchone()
 
@@ -79,14 +79,14 @@ def get_messages(current_user, conversation_id):
 
         # Mark messages as read
         db.execute(
-            "UPDATE messages SET is_read = 1 WHERE conversation_id = ? AND sender_id != ?",
+            "UPDATE messages SET is_read = 1 WHERE conversation_id = %s AND sender_id != %s",
             (conversation_id, user_id),
         )
         db.commit()
 
         # Fetch messages
         messages = db.execute(
-            "SELECT id, sender_id, content, created_at, is_read FROM messages WHERE conversation_id = ? ORDER BY created_at ASC",
+            "SELECT id, sender_id, content, created_at, is_read FROM messages WHERE conversation_id = %s ORDER BY created_at ASC",
             (conversation_id,),
         ).fetchall()
 
@@ -128,7 +128,7 @@ def send_message(current_user):
         conv = db.execute(
             """
             SELECT id FROM conversations 
-            WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)
+            WHERE (user1_id = %s AND user2_id = %s) OR (user1_id = %s AND user2_id = %s)
         """,
             (sender_id, receiver_id, receiver_id, sender_id),
         ).fetchone()
@@ -137,13 +137,13 @@ def send_message(current_user):
             conversation_id = conv["id"]
             # Update timestamp
             db.execute(
-                "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                "UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = %s",
                 (conversation_id,),
             )
         else:
             # Create new conversation
             cursor = db.execute(
-                "INSERT INTO conversations (user1_id, user2_id) VALUES (?, ?)",
+                "INSERT INTO conversations (user1_id, user2_id) VALUES (%s, %s)",
                 (sender_id, receiver_id),
             )
             conversation_id = cursor.lastrowid
@@ -155,7 +155,7 @@ def send_message(current_user):
 
         # Insert message
         db.execute(
-            "INSERT INTO messages (conversation_id, sender_id, content) VALUES (?, ?, ?)",
+            "INSERT INTO messages (conversation_id, sender_id, content) VALUES (%s, %s, %s)",
             (conversation_id, sender_id, encrypted_content),
         )
         db.commit()

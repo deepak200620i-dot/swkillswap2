@@ -41,7 +41,7 @@ def signup():
         # Check if user already exists
         db = get_db()
         existing_user = db.execute(
-            "SELECT id FROM users WHERE email = ?", (email,)
+            "SELECT id FROM users WHERE email = %s", (email,)
         ).fetchone()
 
         if existing_user:
@@ -60,11 +60,11 @@ def signup():
         else:
             initials = "SS"  # Default fallback
 
-        default_pic = f"https://ui-avatars.com/api/?name={initials}&background=random"
+        default_pic = f"https://ui-avatars.com/api/%sname={initials}&background=random"
 
         # Insert new user
         cursor = db.execute(
-            "INSERT INTO users (email, password_hash, full_name, profile_picture) VALUES (?, ?, ?, ?)",
+            "INSERT INTO users (email, password_hash, full_name, profile_picture) VALUES (%s, %s, %s, %s)",
             (email, password_hash, full_name, default_pic),
         )
         db.commit()
@@ -103,7 +103,7 @@ def login():
         # Find user
         db = get_db()
         user = db.execute(
-            "SELECT id, email, password_hash, full_name, bio, profile_picture FROM users WHERE email = ?",
+            "SELECT id, email, password_hash, full_name, bio, profile_picture FROM users WHERE email = %s",
             (email,),
         ).fetchone()
 
@@ -148,7 +148,7 @@ def get_current_user():
         try:
             db = get_db()
             user = db.execute(
-                "SELECT id, email, full_name, bio, profile_picture, location, availability FROM users WHERE id = ?",
+                "SELECT id, email, full_name, bio, profile_picture, location, availability FROM users WHERE id = %s",
                 (current_user["user_id"],),
             ).fetchone()
 

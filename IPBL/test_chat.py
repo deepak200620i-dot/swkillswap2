@@ -64,7 +64,7 @@ class ChatTestCase(unittest.TestCase):
         # Verify message in DB is encrypted
         db = get_db()
         msg_row = db.execute(
-            "SELECT content FROM messages WHERE conversation_id = ?", (conv_id,)
+            "SELECT content FROM messages WHERE conversation_id = %s", (conv_id,)
         ).fetchone()
         self.assertNotEqual(msg_row["content"], msg_content)
         self.assertEqual(decrypt_message(msg_row["content"]), msg_content)

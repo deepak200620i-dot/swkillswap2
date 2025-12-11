@@ -46,13 +46,13 @@ def search_skills():
         if category:
             # Filter by category
             skills = db.execute(
-                "SELECT id, name, category, description FROM skills WHERE category = ? ORDER BY name",
+                "SELECT id, name, category, description FROM skills WHERE category = %s ORDER BY name",
                 (category,),
             ).fetchall()
         elif query:
             # Search by name
             skills = db.execute(
-                "SELECT id, name, category, description FROM skills WHERE name LIKE ? ORDER BY name",
+                "SELECT id, name, category, description FROM skills WHERE name LIKE %s ORDER BY name",
                 (f"%{query}%",),
             ).fetchall()
         else:
