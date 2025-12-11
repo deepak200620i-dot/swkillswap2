@@ -1,602 +1,810 @@
-{% extends "base.html" %}
-
-{% block title %}Messages - SkillSwap{% endblock %}
-
-{% block extra_head %}
+{% extends "base.html" %} {% block title %}Messages - SkillSwap{% endblock %} {%
+block extra_head %}
 <style>
-    /* Fix layout for chat application to be full screen */
-    body {
-        height: 100vh;
-        /* Lock body height */
-        overflow: hidden;
-        /* Prevent body scroll */
+  /* Fix layout for chat application to be full screen */
+  body {
+    height: 100vh;
+    /* Lock body height */
+    overflow: hidden;
+    /* Prevent body scroll */
+  }
+
+  main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    padding-bottom: 0 !important;
+  }
+
+  footer {
+    display: none !important;
+    /* Hide footer to save space */
+  }
+
+  .chat-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Message Bubbles - Light Theme */
+  .message-bubble {
+    border-radius: 1.2rem;
+    padding: 0.75rem 1rem;
+    max-width: 75%;
+    position: relative;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    /* Subtle shadow for light theme depth */
+  }
+
+  .message-sent {
+    background-color: #3b82f6;
+    /* Primary Blue */
+    color: white;
+    border-bottom-right-radius: 0.2rem;
+  }
+
+  .message-received {
+    background-color: #f3f4f6;
+    /* Light Grey */
+    color: #1f2937;
+    /* Dark Text */
+    border-bottom-left-radius: 0.2rem;
+  }
+
+  /* List Item Styling */
+  .list-group-item {
+    border-left: none;
+    border-right: none;
+    border-radius: 0 !important;
+    transition: background-color 0.2s;
+  }
+
+  .list-group-item:hover {
+    background-color: #f9fafb;
+  }
+
+  .list-group-item.active {
+    background-color: #eff6ff;
+    border-color: #eff6ff;
+    color: inherit;
+  }
+
+  /* Conversation List Column & Chat Area logic for mobile */
+  #chat-area-col {
+    background-color: white;
+  }
+
+  /* Responsive Toggling */
+  @media (max-width: 768px) {
+    .chat-view-active #conversations-list-col {
+      display: none !important;
     }
 
-    main {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        overflow: hidden;
-        padding-bottom: 0 !important;
+    .chat-view-active #chat-area-col {
+      display: flex !important;
+      width: 100%;
     }
 
-    footer {
-        display: none !important;
-        /* Hide footer to save space */
+    /* Default state: Show list, hide chat if no conv selected (or just stack them but we want toggle) */
+    /* Actually simpler: Toggle classes on parent row or specialized containers */
+
+    #conversations-list-col {
+      width: 100%;
     }
 
-    .chat-container {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* Message Bubbles - Light Theme */
-    .message-bubble {
-        border-radius: 1.2rem;
-        padding: 0.75rem 1rem;
-        max-width: 75%;
-        position: relative;
-        font-size: 0.95rem;
-        line-height: 1.4;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        /* Subtle shadow for light theme depth */
-    }
-
-    .message-sent {
-        background-color: #3b82f6;
-        /* Primary Blue */
-        color: white;
-        border-bottom-right-radius: 0.2rem;
-    }
-
-    .message-received {
-        background-color: #f3f4f6;
-        /* Light Grey */
-        color: #1f2937;
-        /* Dark Text */
-        border-bottom-left-radius: 0.2rem;
-    }
-
-    /* List Item Styling */
-    .list-group-item {
-        border-left: none;
-        border-right: none;
-        border-radius: 0 !important;
-        transition: background-color 0.2s;
-    }
-
-    .list-group-item:hover {
-        background-color: #f9fafb;
-    }
-
-    .list-group-item.active {
-        background-color: #eff6ff;
-        border-color: #eff6ff;
-        color: inherit;
-    }
-
-    /* Conversation List Column & Chat Area logic for mobile */
     #chat-area-col {
-        background-color: white;
+      display: none;
+      /* Hidden by default on mobile until selected */
+      width: 100%;
+    }
+  }
+
+  /* Adjustments for desktop to ensure they sit side-by-side */
+  @media (min-width: 769px) {
+    #conversations-list-col {
+      display: flex !important;
+      width: 33.333333%;
     }
 
-    /* Responsive Toggling */
-    @media (max-width: 768px) {
-        .chat-view-active #conversations-list-col {
-            display: none !important;
-        }
-
-        .chat-view-active #chat-area-col {
-            display: flex !important;
-            width: 100%;
-        }
-
-        /* Default state: Show list, hide chat if no conv selected (or just stack them but we want toggle) */
-        /* Actually simpler: Toggle classes on parent row or specialized containers */
-
-        #conversations-list-col {
-            width: 100%;
-        }
-
-        #chat-area-col {
-            display: none;
-            /* Hidden by default on mobile until selected */
-            width: 100%;
-        }
+    #chat-area-col {
+      display: flex !important;
+      width: 66.666667%;
     }
 
-    /* Adjustments for desktop to ensure they sit side-by-side */
-    @media (min-width: 769px) {
-        #conversations-list-col {
-            display: flex !important;
-            width: 33.333333%;
-        }
-
-        #chat-area-col {
-            display: flex !important;
-            width: 66.666667%;
-        }
-
-        #mobile-back-btn {
-            display: none !important;
-        }
+    #mobile-back-btn {
+      display: none !important;
     }
+  }
 
-    /* Scrollbar Styling - Subtle for Light Theme */
-    ::-webkit-scrollbar {
-        width: 6px;
-    }
+  /* Scrollbar Styling - Subtle for Light Theme */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
 
-    ::-webkit-scrollbar-track {
-        background: transparent;
-    }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-    ::-webkit-scrollbar-thumb {
-        background: #d1d5db;
-        border-radius: 3px;
-    }
+  ::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+  }
 
-    ::-webkit-scrollbar-thumb:hover {
-        background: #9ca3af;
-    }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
 </style>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <div class="container-fluid h-100 p-0">
-    <div class="row h-100 g-0" id="chat-main-row">
-        <!-- Conversations List -->
-        <div class="col-md-4 h-100 border-end d-flex flex-column bg-white" id="conversations-list-col">
-            <div class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold text-dark">Messages</h5>
-                <button class="btn btn-link text-dark p-0"><i class="bi bi-pencil-square fs-5"></i></button>
-            </div>
-            <div class="list-group list-group-flush overflow-auto flex-grow-1" id="conversations-list">
-                <!-- Conversations will be loaded here -->
-                <div class="text-center mt-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-            </div>
+  <div class="row h-100 g-0" id="chat-main-row">
+    <!-- Conversations List -->
+    <div
+      class="col-md-4 h-100 border-end d-flex flex-column bg-white"
+      id="conversations-list-col"
+    >
+      <div
+        class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0 fw-bold text-dark">Messages</h5>
+        <button class="btn btn-link text-dark p-0">
+          <i class="bi bi-pencil-square fs-5"></i>
+        </button>
+      </div>
+      <div
+        class="list-group list-group-flush overflow-auto flex-grow-1"
+        id="conversations-list"
+      >
+        <!-- Conversations will be loaded here -->
+        <div class="text-center mt-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
         </div>
-
-        <!-- Chat Area -->
-        <div class="col-md-8 h-100 d-flex flex-column bg-white" id="chat-area-col">
-            <div class="d-flex flex-column h-100" id="chat-area">
-                <!-- Chat Header -->
-                <div class="border-bottom p-3 d-none shadow-sm bg-white" id="chat-header" style="z-index: 10;">
-                    <div class="d-flex align-items-center">
-                        <!-- Back Button (Mobile Only) -->
-                        <button class="btn btn-link text-dark p-0 me-3 d-md-none" id="mobile-back-btn"
-                            onclick="showConversationList()">
-                            <i class="bi bi-arrow-left fs-4"></i>
-                        </button>
-
-                        <a id="chat-header-link" href="#"
-                            class="d-flex align-items-center text-decoration-none text-dark">
-                            <img src="" id="chat-header-img" class="rounded-circle me-3 border"
-                                style="width: 40px; height: 40px; object-fit: cover;">
-                            <div>
-                                <h6 class="mb-0 fw-bold" id="chat-header-name">User Name</h6>
-
-                            </div>
-                        </a>
-
-                    </div>
-                </div>
-
-                <!-- Messages Container -->
-                <div class="flex-grow-1 overflow-auto p-4 d-none" id="messages-container"
-                    style="background-color: #ffffff;">
-                    <!-- Messages will be loaded here -->
-                </div>
-
-                <!-- Empty State (Desktop only usually, or if nothing selected) -->
-                <div class="flex-grow-1 d-flex align-items-center justify-content-center text-muted" id="empty-state">
-                    <div class="text-center">
-                        <div class="bg-light p-4 rounded-circle shadow-sm mb-3 d-inline-block">
-                            <i class="bi bi-messenger text-primary" style="font-size: 3rem;"></i>
-                        </div>
-                        <h4 class="fw-bold text-dark">Your Messages</h4>
-                        <p class="text-muted">Select a conversation to start chatting</p>
-                        <button class="btn btn-primary rounded-pill px-4 mt-2">Send Message</button>
-                    </div>
-                </div>
-
-                <!-- Input Area -->
-                <div class="border-top p-3 d-none bg-white" id="input-area">
-                    <form id="message-form" class="d-flex align-items-center gap-2" style="position: relative;">
-                        <button type="button" class="btn btn-link text-dark p-0 me-2" id="emoji-btn" title="Add emoji"><i
-                                class="bi bi-emoji-smile fs-5"></i></button>
-                        <div id="emoji-picker-container" style="position: absolute; bottom: 50px; left: 0; display: none; z-index: 1050;"></div>
-                        <input type="text" class="form-control rounded-pill bg-light border-0 py-2" id="message-input"
-                            placeholder="Message..." autocomplete="off">
-                        <button type="submit" class="btn btn-primary rounded-circle d-none" id="send-btn"
-                            style="width: 35px; height: 35px; align-items: center; justify-content: center;">
-                            <i class="bi bi-send-fill" style="font-size: 0.9rem; margin-left: 2px;"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+
+    <!-- Chat Area -->
+    <div class="col-md-8 h-100 d-flex flex-column bg-white" id="chat-area-col">
+      <div class="d-flex flex-column h-100" id="chat-area">
+        <!-- Chat Header -->
+        <div
+          class="border-bottom p-3 d-none shadow-sm bg-white"
+          id="chat-header"
+          style="z-index: 10"
+        >
+          <div class="d-flex align-items-center">
+            <!-- Back Button (Mobile Only) -->
+            <button
+              class="btn btn-link text-dark p-0 me-3 d-md-none"
+              id="mobile-back-btn"
+              onclick="showConversationList()"
+            >
+              <i class="bi bi-arrow-left fs-4"></i>
+            </button>
+
+            <a
+              id="chat-header-link"
+              href="#"
+              class="d-flex align-items-center text-decoration-none text-dark"
+            >
+              <img
+                src=""
+                id="chat-header-img"
+                class="rounded-circle me-3 border"
+                style="width: 40px; height: 40px; object-fit: cover"
+              />
+              <div>
+                <h6 class="mb-0 fw-bold" id="chat-header-name">User Name</h6>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Messages Container -->
+        <div
+          class="flex-grow-1 overflow-auto p-4 d-none"
+          id="messages-container"
+          style="background-color: #ffffff"
+        >
+          <!-- Messages will be loaded here -->
+        </div>
+
+        <!-- Empty State (Desktop only usually, or if nothing selected) -->
+        <div
+          class="flex-grow-1 d-flex align-items-center justify-content-center text-muted"
+          id="empty-state"
+        >
+          <div class="text-center">
+            <div
+              class="bg-light p-4 rounded-circle shadow-sm mb-3 d-inline-block"
+            >
+              <i
+                class="bi bi-messenger text-primary"
+                style="font-size: 3rem"
+              ></i>
+            </div>
+            <h4 class="fw-bold text-dark">Your Messages</h4>
+            <p class="text-muted">Select a conversation to start chatting</p>
+            <button class="btn btn-primary rounded-pill px-4 mt-2">
+              Send Message
+            </button>
+          </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="border-top p-3 d-none bg-white" id="input-area">
+          <form
+            id="message-form"
+            class="d-flex align-items-center gap-2"
+            style="position: relative"
+          >
+            <button
+              type="button"
+              class="btn btn-link text-dark p-0 me-2"
+              id="emoji-btn"
+              title="Add emoji"
+            >
+              <i class="bi bi-emoji-smile fs-5"></i>
+            </button>
+            <div
+              id="emoji-picker-container"
+              style="
+                position: absolute;
+                bottom: 50px;
+                left: 0;
+                display: none;
+                z-index: 1050;
+              "
+            ></div>
+            <input
+              type="text"
+              class="form-control rounded-pill bg-light border-0 py-2"
+              id="message-input"
+              placeholder="Message..."
+              autocomplete="off"
+            />
+            <button
+              type="submit"
+              class="btn btn-primary rounded-circle d-none"
+              id="send-btn"
+              style="
+                width: 35px;
+                height: 35px;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <i
+                class="bi bi-send-fill"
+                style="font-size: 0.9rem; margin-left: 2px"
+              ></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-{% endblock %}
-
-{% block extra_scripts %}
+{% endblock %} {% block extra_scripts %}
 <script>
-    const API_URL = 'http://localhost:5000/api';
-    const token = localStorage.getItem('token');
-    const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
-    const DEFAULT_AVATAR = '/static/images/default-avatar.png';
+  const API_URL = "https://swkillswap2-1.onrender.com/api";
+  const token = localStorage.getItem("token");
+  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+  const DEFAULT_AVATAR = "/static/images/default-avatar.png";
 
-    console.log('Chat page loaded. Token present:', !!token, 'User:', currentUser?.email);
+  console.log(
+    "Chat page loaded. Token present:",
+    !!token,
+    "User:",
+    currentUser?.email
+  );
 
-    if (!token || !currentUser) {
-        console.log('No token or user found, redirecting to login');
-        window.location.href = '/login';
-    }
+  if (!token || !currentUser) {
+    console.log("No token or user found, redirecting to login");
+    window.location.href = "/login";
+  }
 
-    let currentConversationId = null;
-    let currentReceiverId = null;
-    let currentReceiverPic = null;
-    let pollingInterval = null;
+  let currentConversationId = null;
+  let currentReceiverId = null;
+  let currentReceiverPic = null;
+  let pollingInterval = null;
 
-    // Load conversations on page load
-    console.log('Loading conversations...');
-    loadConversations();
+  // Load conversations on page load
+  console.log("Loading conversations...");
+  loadConversations();
 
-    // Poll for new messages every 5 seconds
-    setInterval(loadConversations, 5000);
+  // Poll for new messages every 5 seconds
+  setInterval(loadConversations, 5000);
 
-    // Show/Hide send button based on input
-    document.getElementById('message-input').addEventListener('input', function () {
-        const btn = document.getElementById('send-btn');
-        if (this.value.trim().length > 0) {
-            btn.classList.remove('d-none');
-            btn.classList.add('d-flex');
-        } else {
-            btn.classList.add('d-none');
-            btn.classList.remove('d-flex');
-        }
+  // Show/Hide send button based on input
+  document
+    .getElementById("message-input")
+    .addEventListener("input", function () {
+      const btn = document.getElementById("send-btn");
+      if (this.value.trim().length > 0) {
+        btn.classList.remove("d-none");
+        btn.classList.add("d-flex");
+      } else {
+        btn.classList.add("d-none");
+        btn.classList.remove("d-flex");
+      }
     });
 
-    async function loadConversations() {
-        try {
-            const response = await fetch(`${API_URL}/chat/conversations`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
+  async function loadConversations() {
+    try {
+      const response = await fetch(`${API_URL}/chat/conversations`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
 
-            if (response.ok) {
-                renderConversations(data.conversations || []);
-            } else {
-                console.error('Error response:', data);
-                if (response.status === 401) {
-                    console.log('Token expired, redirecting to login');
-                    window.location.href = '/login';
-                }
-            }
-        } catch (error) {
-            console.error('Error loading conversations:', error);
+      if (response.ok) {
+        renderConversations(data.conversations || []);
+      } else {
+        console.error("Error response:", data);
+        if (response.status === 401) {
+          console.log("Token expired, redirecting to login");
+          window.location.href = "/login";
         }
+      }
+    } catch (error) {
+      console.error("Error loading conversations:", error);
+    }
+  }
+
+  function renderConversations(conversations) {
+    const list = document.getElementById("conversations-list");
+
+    if (!Array.isArray(conversations) || conversations.length === 0) {
+      list.innerHTML =
+        '<p class="text-muted text-center mt-4">No conversations yet.</p>';
+      return;
     }
 
-    function renderConversations(conversations) {
-        const list = document.getElementById('conversations-list');
-
-        if (!Array.isArray(conversations) || conversations.length === 0) {
-            list.innerHTML = '<p class="text-muted text-center mt-4">No conversations yet.</p>';
-            return;
-        }
-
-        list.innerHTML = conversations.map(conv => {
-            const pic = conv.other_user.profile_picture || DEFAULT_AVATAR;
-            const isSelected = currentConversationId === conv.id;
-            const lastMsg = conv.last_message || 'No messages';
-            const displayMsg = lastMsg.length > 20 ? lastMsg.substring(0, 20) + '...' : lastMsg;
-            return `
-            <a href="#" class="list-group-item list-group-item-action ${isSelected ? 'active' : ''} border-0 py-3" 
-               onclick="selectConversation(${conv.id}, ${conv.other_user.id}, '${conv.other_user.full_name.replace(/'/g, "\\'")}', '${pic.replace(/'/g, "\\'")}'); return false;">
+    list.innerHTML = conversations
+      .map((conv) => {
+        const pic = conv.other_user.profile_picture || DEFAULT_AVATAR;
+        const isSelected = currentConversationId === conv.id;
+        const lastMsg = conv.last_message || "No messages";
+        const displayMsg =
+          lastMsg.length > 20 ? lastMsg.substring(0, 20) + "..." : lastMsg;
+        return `
+            <a href="#" class="list-group-item list-group-item-action ${
+              isSelected ? "active" : ""
+            } border-0 py-3" 
+               onclick="selectConversation(${conv.id}, ${
+          conv.other_user.id
+        }, '${conv.other_user.full_name.replace(/'/g, "\\'")}', '${pic.replace(
+          /'/g,
+          "\\'"
+        )}'); return false;">
                 <div class="d-flex w-100 justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
                         <img src="${pic}" class="rounded-circle me-3" style="width: 56px; height: 56px; object-fit: cover;">
                         <div>
-                            <h6 class="mb-0 ${conv.unread_count > 0 ? 'fw-bold' : ''}" style="font-size: 1rem;">${conv.other_user.full_name}</h6>
-                            <small class="${conv.unread_count > 0 ? 'fw-bold text-dark' : 'text-muted'}" style="font-size: 0.9rem;">
-                                ${conv.unread_count > 0 ? 'New message • ' : ''} ${displayMsg}
-                                <span class="mx-1">•</span> ${formatTimeRelative(conv.last_message_time)}
+                            <h6 class="mb-0 ${
+                              conv.unread_count > 0 ? "fw-bold" : ""
+                            }" style="font-size: 1rem;">${
+          conv.other_user.full_name
+        }</h6>
+                            <small class="${
+                              conv.unread_count > 0
+                                ? "fw-bold text-dark"
+                                : "text-muted"
+                            }" style="font-size: 0.9rem;">
+                                ${
+                                  conv.unread_count > 0 ? "New message • " : ""
+                                } ${displayMsg}
+                                <span class="mx-1">•</span> ${formatTimeRelative(
+                                  conv.last_message_time
+                                )}
                             </small>
                         </div>
                     </div>
-                    ${conv.unread_count > 0 ? `<div class="bg-primary rounded-circle" style="width: 10px; height: 10px;"></div>` : ''}
+                    ${
+                      conv.unread_count > 0
+                        ? `<div class="bg-primary rounded-circle" style="width: 10px; height: 10px;"></div>`
+                        : ""
+                    }
                 </div>
             </a>
-        `}).join('');
+        `;
+      })
+      .join("");
+  }
+
+  function selectConversation(id, otherUserId, name, pic) {
+    currentConversationId = id;
+    currentReceiverId = otherUserId;
+    currentReceiverPic = pic || DEFAULT_AVATAR;
+
+    // Update UI
+    document.getElementById("empty-state").classList.add("d-none");
+    document.getElementById("chat-header").classList.remove("d-none");
+    document.getElementById("messages-container").classList.remove("d-none");
+    document.getElementById("input-area").classList.remove("d-none");
+
+    document.getElementById("chat-header-name").textContent = name;
+    document.getElementById("chat-header-img").src = currentReceiverPic;
+    document.getElementById(
+      "chat-header-link"
+    ).href = `/profile/${otherUserId}`;
+
+    // Responsive Mobile Logic: Add class to body or row to toggle view
+    document.getElementById("chat-main-row").classList.add("chat-view-active");
+    // On mobile, this CSS class will hide #conversations-list-col and show #chat-area-col
+
+    // Highlight selected conversation
+    loadConversations();
+
+    // Load messages immediately
+    loadMessages();
+
+    // Start polling messages
+    if (pollingInterval) clearInterval(pollingInterval);
+    pollingInterval = setInterval(loadMessages, 3000);
+  }
+
+  function showConversationList() {
+    // Go back to list view on mobile
+    document
+      .getElementById("chat-main-row")
+      .classList.remove("chat-view-active");
+    currentConversationId = null; // Optional: deselect
+  }
+
+  async function loadMessages() {
+    if (!currentConversationId) return;
+
+    try {
+      const response = await fetch(
+        `${API_URL}/chat/${currentConversationId}/messages`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        renderMessages(data.messages || []);
+      } else {
+        console.error("Error loading messages:", data);
+        if (response.status === 401) {
+          window.location.href = "/login";
+        }
+      }
+    } catch (error) {
+      console.error("Error loading messages:", error);
+    }
+  }
+
+  function renderMessages(messages) {
+    const container = document.getElementById("messages-container");
+    const wasScrolledToBottom =
+      container.scrollHeight - container.scrollTop <=
+      container.clientHeight + 100; // tolerance
+    const myPic = currentUser.profile_picture || DEFAULT_AVATAR;
+
+    if (!Array.isArray(messages)) {
+      messages = [];
     }
 
-    function selectConversation(id, otherUserId, name, pic) {
-        currentConversationId = id;
-        currentReceiverId = otherUserId;
-        currentReceiverPic = pic || DEFAULT_AVATAR;
-
-        // Update UI
-        document.getElementById('empty-state').classList.add('d-none');
-        document.getElementById('chat-header').classList.remove('d-none');
-        document.getElementById('messages-container').classList.remove('d-none');
-        document.getElementById('input-area').classList.remove('d-none');
-
-        document.getElementById('chat-header-name').textContent = name;
-        document.getElementById('chat-header-img').src = currentReceiverPic;
-        document.getElementById('chat-header-link').href = `/profile/${otherUserId}`;
-
-        // Responsive Mobile Logic: Add class to body or row to toggle view
-        document.getElementById('chat-main-row').classList.add('chat-view-active');
-        // On mobile, this CSS class will hide #conversations-list-col and show #chat-area-col
-
-        // Highlight selected conversation
-        loadConversations();
-
-        // Load messages immediately
-        loadMessages();
-
-        // Start polling messages
-        if (pollingInterval) clearInterval(pollingInterval);
-        pollingInterval = setInterval(loadMessages, 3000);
-    }
-
-    function showConversationList() {
-        // Go back to list view on mobile
-        document.getElementById('chat-main-row').classList.remove('chat-view-active');
-        currentConversationId = null; // Optional: deselect
-    }
-
-    async function loadMessages() {
-        if (!currentConversationId) return;
-
-        try {
-            const response = await fetch(`${API_URL}/chat/${currentConversationId}/messages`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-
-            if (response.ok) {
-                renderMessages(data.messages || []);
-            } else {
-                console.error('Error loading messages:', data);
-                if (response.status === 401) {
-                    window.location.href = '/login';
+    container.innerHTML = messages
+      .map(
+        (msg) => `
+            <div class="d-flex mb-2 ${
+              msg.is_me ? "justify-content-end" : "justify-content-start"
+            } align-items-end">
+                ${
+                  !msg.is_me
+                    ? `<img src="${currentReceiverPic}" class="rounded-circle me-2 mb-1" style="width: 28px; height: 28px; object-fit: cover;">`
+                    : ""
                 }
-            }
-        } catch (error) {
-            console.error('Error loading messages:', error);
-        }
-    }
-
-    function renderMessages(messages) {
-        const container = document.getElementById('messages-container');
-        const wasScrolledToBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100; // tolerance
-        const myPic = currentUser.profile_picture || DEFAULT_AVATAR;
-
-        if (!Array.isArray(messages)) {
-            messages = [];
-        }
-
-        container.innerHTML = messages.map(msg => `
-            <div class="d-flex mb-2 ${msg.is_me ? 'justify-content-end' : 'justify-content-start'} align-items-end">
-                ${!msg.is_me ? `<img src="${currentReceiverPic}" class="rounded-circle me-2 mb-1" style="width: 28px; height: 28px; object-fit: cover;">` : ''}
-                <div class="message-bubble ${msg.is_me ? 'message-sent' : 'message-received'}">
-                    ${msg.content || '[Message not loaded]'}
+                <div class="message-bubble ${
+                  msg.is_me ? "message-sent" : "message-received"
+                }">
+                    ${msg.content || "[Message not loaded]"}
                 </div>
             </div>
-            ${false ? `<small class="text-muted d-block ${msg.is_me ? 'text-end' : 'text-start'} mb-3" style="font-size: 0.7rem;">${formatTime(msg.created_at)}</small>` : ''} 
-        `).join('');
+            ${
+              false
+                ? `<small class="text-muted d-block ${
+                    msg.is_me ? "text-end" : "text-start"
+                  } mb-3" style="font-size: 0.7rem;">${formatTime(
+                    msg.created_at
+                  )}</small>`
+                : ""
+            } 
+        `
+      )
+      .join("");
 
-        // Force scroll to bottom for now as typical chat behavior
-        container.scrollTop = container.scrollHeight;
-    }
+    // Force scroll to bottom for now as typical chat behavior
+    container.scrollTop = container.scrollHeight;
+  }
 
-    document.getElementById('message-form').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const input = document.getElementById('message-input');
-        const content = input.value.trim();
+  document
+    .getElementById("message-form")
+    .addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const input = document.getElementById("message-input");
+      const content = input.value.trim();
 
-        if (!content || !currentReceiverId) return;
+      if (!content || !currentReceiverId) return;
 
-        // Optimistic UI
-        const originalContent = content;
-        input.value = '';
-        document.getElementById('send-btn').classList.add('d-none');
-        document.getElementById('send-btn').classList.remove('d-flex');
+      // Optimistic UI
+      const originalContent = content;
+      input.value = "";
+      document.getElementById("send-btn").classList.add("d-none");
+      document.getElementById("send-btn").classList.remove("d-flex");
 
-        try {
-            const response = await fetch(`${API_URL}/chat/send`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    receiver_id: currentReceiverId,
-                    content: content
-                })
-            });
+      try {
+        const response = await fetch(`${API_URL}/chat/send`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            receiver_id: currentReceiverId,
+            content: content,
+          }),
+        });
 
-            if (response.ok) {
-                loadMessages();
-                loadConversations();
-            } else {
-                const errData = await response.json();
-                console.error('Failed to send message:', errData);
-                input.value = originalContent;
-                document.getElementById('send-btn').classList.remove('d-none');
-                document.getElementById('send-btn').classList.add('d-flex');
-                alert('Failed to send message: ' + (errData.error || 'Unknown error'));
-            }
-        } catch (error) {
-            console.error('Error sending message:', error);
-            input.value = originalContent;
-            document.getElementById('send-btn').classList.remove('d-none');
-            document.getElementById('send-btn').classList.add('d-flex');
-            alert('Error sending message: ' + error.message);
+        if (response.ok) {
+          loadMessages();
+          loadConversations();
+        } else {
+          const errData = await response.json();
+          console.error("Failed to send message:", errData);
+          input.value = originalContent;
+          document.getElementById("send-btn").classList.remove("d-none");
+          document.getElementById("send-btn").classList.add("d-flex");
+          alert(
+            "Failed to send message: " + (errData.error || "Unknown error")
+          );
         }
+      } catch (error) {
+        console.error("Error sending message:", error);
+        input.value = originalContent;
+        document.getElementById("send-btn").classList.remove("d-none");
+        document.getElementById("send-btn").classList.add("d-flex");
+        alert("Error sending message: " + error.message);
+      }
     });
 
-    function formatTime(dateString) {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    }
+  function formatTime(dateString) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
 
-    function formatTimeRelative(dateString) {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        const now = new Date();
-        const diff = now - date;
+  function formatTimeRelative(dateString) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
 
-        // If less than 24 hours
-        if (diff < 86400000 && now.getDate() === date.getDate()) {
-            return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        }
-        // If within a week
-        if (diff < 604800000) {
-            return date.toLocaleDateString([], { weekday: 'short' });
-        }
-        // Date
-        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    // If less than 24 hours
+    if (diff < 86400000 && now.getDate() === date.getDate()) {
+      return date.toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+      });
     }
+    // If within a week
+    if (diff < 604800000) {
+      return date.toLocaleDateString([], { weekday: "short" });
+    }
+    // Date
+    return date.toLocaleDateString([], { month: "short", day: "numeric" });
+  }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.4/dist/index.min.js"></script>
 <script>
-    // Initialize emoji picker when DOM is ready
-    function initEmojiPicker() {
-        const emojiBtn = document.getElementById('emoji-btn');
-        const messageInput = document.getElementById('message-input');
-        const pickerContainer = document.getElementById('emoji-picker-container');
-        
-        if (!emojiBtn || !messageInput || !pickerContainer) {
-            console.warn('Emoji picker elements not found');
-            return;
-        }
+  // Initialize emoji picker when DOM is ready
+  function initEmojiPicker() {
+    const emojiBtn = document.getElementById("emoji-btn");
+    const messageInput = document.getElementById("message-input");
+    const pickerContainer = document.getElementById("emoji-picker-container");
 
-        // Try to use the EmojiButton library
-        if (typeof EmojiButton !== 'undefined') {
-            try {
-                const picker = new EmojiButton({
-                    position: 'top-start',
-                    theme: 'light',
-                    autoHide: true,
-                    zIndex: 10000,
-                    rootElement: pickerContainer,
-                    style: 'native'
-                });
-
-                emojiBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    // Toggle picker
-                    if (pickerContainer.style.display === 'none' || !pickerContainer.style.display) {
-                        picker.showPicker(emojiBtn);
-                        pickerContainer.style.display = 'block';
-                    } else {
-                        picker.hidePicker();
-                        pickerContainer.style.display = 'none';
-                    }
-                });
-
-                picker.on('emoji', (selection) => {
-                    messageInput.value += selection.emoji;
-                    // Trigger input event to update send button visibility
-                    messageInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    messageInput.focus();
-                });
-
-                console.log('Emoji picker initialized successfully');
-            } catch (error) {
-                console.error('Error initializing EmojiButton:', error);
-                setupFallbackEmojiPicker();
-            }
-        } else {
-            console.warn('EmojiButton library not loaded, using fallback');
-            setupFallbackEmojiPicker();
-        }
+    if (!emojiBtn || !messageInput || !pickerContainer) {
+      console.warn("Emoji picker elements not found");
+      return;
     }
 
-    // Fallback emoji picker with common emojis
-    function setupFallbackEmojiPicker() {
-        const emojiBtn = document.getElementById('emoji-btn');
-        const messageInput = document.getElementById('message-input');
-        const pickerContainer = document.getElementById('emoji-picker-container');
-        
-        if (!emojiBtn || !messageInput) return;
-
-        // Common emoji set
-        const commonEmojis = [
-            '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂',
-            '☺️', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍',
-            '🥰', '😘', '😗', '😚', '😙', '🥲', '😋', '😛',
-            '😜', '🤪', '😝', '😑', '😐', '😏', '😒', '🙁',
-            '😞', '😔', '😟', '😕', '🙁', '😲', '😳', '😥',
-            '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩',
-            '👍', '👎', '👏', '🙏', '❤️', '💔', '💕', '💖',
-            '🔥', '⚡', '✨', '🎉', '🎊', '😎', '🤔', '🤨'
-        ];
-
-        let pickerHTML = '<div style="background: white; border: 1px solid #ccc; border-radius: 8px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 280px;">';
-        pickerHTML += commonEmojis.map(emoji => `<button type="button" class="btn btn-sm p-1" style="font-size: 1.5rem; border: none; background: none; cursor: pointer; padding: 4px 8px; border-radius: 4px;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'" onclick="addEmoji('${emoji}')">${emoji}</button>`).join('');
-        pickerHTML += '</div>';
-        
-        pickerContainer.innerHTML = pickerHTML;
-
-        emojiBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            if (pickerContainer.style.display === 'none' || !pickerContainer.style.display) {
-                pickerContainer.style.display = 'block';
-            } else {
-                pickerContainer.style.display = 'none';
-            }
+    // Try to use the EmojiButton library
+    if (typeof EmojiButton !== "undefined") {
+      try {
+        const picker = new EmojiButton({
+          position: "top-start",
+          theme: "light",
+          autoHide: true,
+          zIndex: 10000,
+          rootElement: pickerContainer,
+          style: "native",
         });
 
-        console.log('Fallback emoji picker loaded');
-    }
+        emojiBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
 
-    // Global function to add emoji
-    function addEmoji(emoji) {
-        const messageInput = document.getElementById('message-input');
-        const pickerContainer = document.getElementById('emoji-picker-container');
-        
-        if (messageInput) {
-            messageInput.value += emoji;
-            messageInput.dispatchEvent(new Event('input', { bubbles: true }));
-            messageInput.focus();
-        }
-        
-        if (pickerContainer) {
-            pickerContainer.style.display = 'none';
-        }
-    }
+          // Toggle picker
+          if (
+            pickerContainer.style.display === "none" ||
+            !pickerContainer.style.display
+          ) {
+            picker.showPicker(emojiBtn);
+            pickerContainer.style.display = "block";
+          } else {
+            picker.hidePicker();
+            pickerContainer.style.display = "none";
+          }
+        });
 
-    // Close emoji picker when clicking outside
-    document.addEventListener('click', (e) => {
-        const emojiBtn = document.getElementById('emoji-btn');
-        const pickerContainer = document.getElementById('emoji-picker-container');
-        
-        if (emojiBtn && pickerContainer && !emojiBtn.contains(e.target) && !pickerContainer.contains(e.target)) {
-            pickerContainer.style.display = 'none';
-        }
+        picker.on("emoji", (selection) => {
+          messageInput.value += selection.emoji;
+          // Trigger input event to update send button visibility
+          messageInput.dispatchEvent(new Event("input", { bubbles: true }));
+          messageInput.focus();
+        });
+
+        console.log("Emoji picker initialized successfully");
+      } catch (error) {
+        console.error("Error initializing EmojiButton:", error);
+        setupFallbackEmojiPicker();
+      }
+    } else {
+      console.warn("EmojiButton library not loaded, using fallback");
+      setupFallbackEmojiPicker();
+    }
+  }
+
+  // Fallback emoji picker with common emojis
+  function setupFallbackEmojiPicker() {
+    const emojiBtn = document.getElementById("emoji-btn");
+    const messageInput = document.getElementById("message-input");
+    const pickerContainer = document.getElementById("emoji-picker-container");
+
+    if (!emojiBtn || !messageInput) return;
+
+    // Common emoji set
+    const commonEmojis = [
+      "😀",
+      "�",
+      "😄",
+      "😁",
+      "😆",
+      "😅",
+      "🤣",
+      "😂",
+      "☺️",
+      "😊",
+      "😇",
+      "🙂",
+      "🙃",
+      "😉",
+      "😌",
+      "😍",
+      "🥰",
+      "😘",
+      "😗",
+      "😚",
+      "😙",
+      "🥲",
+      "😋",
+      "😛",
+      "😜",
+      "🤪",
+      "😝",
+      "😑",
+      "😐",
+      "😏",
+      "😒",
+      "🙁",
+      "😞",
+      "😔",
+      "😟",
+      "😕",
+      "🙁",
+      "😲",
+      "😳",
+      "😥",
+      "😢",
+      "",
+      "😱",
+      "😖",
+      "😣",
+      "😞",
+      "😓",
+      "😩",
+      "👍",
+      "",
+      "👏",
+      "🙏",
+      "❤️",
+      "💔",
+      "💕",
+      "💖",
+      "🔥",
+      "⚡",
+      "✨",
+      "🎉",
+      "🎊",
+      "😎",
+      "🤔",
+      "🤨",
+    ];
+
+    let pickerHTML =
+      '<div style="background: white; border: 1px solid #ccc; border-radius: 8px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 280px;">';
+    pickerHTML += commonEmojis
+      .map(
+        (emoji) =>
+          `<button type="button" class="btn btn-sm p-1" style="font-size: 1.5rem; border: none; background: none; cursor: pointer; padding: 4px 8px; border-radius: 4px;" onmouseover="this.style.backgroundColor='#f0f0f0'" onmouseout="this.style.backgroundColor='transparent'" onclick="addEmoji('${emoji}')">${emoji}</button>`
+      )
+      .join("");
+    pickerHTML += "</div>";
+
+    pickerContainer.innerHTML = pickerHTML;
+
+    emojiBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (
+        pickerContainer.style.display === "none" ||
+        !pickerContainer.style.display
+      ) {
+        pickerContainer.style.display = "block";
+      } else {
+        pickerContainer.style.display = "none";
+      }
     });
 
-    // Initialize when page loads
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initEmojiPicker);
-    } else {
-        // DOM already loaded
-        initEmojiPicker();
+    console.log("Fallback emoji picker loaded");
+  }
+
+  // Global function to add emoji
+  function addEmoji(emoji) {
+    const messageInput = document.getElementById("message-input");
+    const pickerContainer = document.getElementById("emoji-picker-container");
+
+    if (messageInput) {
+      messageInput.value += emoji;
+      messageInput.dispatchEvent(new Event("input", { bubbles: true }));
+      messageInput.focus();
     }
+
+    if (pickerContainer) {
+      pickerContainer.style.display = "none";
+    }
+  }
+
+  // Close emoji picker when clicking outside
+  document.addEventListener("click", (e) => {
+    const emojiBtn = document.getElementById("emoji-btn");
+    const pickerContainer = document.getElementById("emoji-picker-container");
+
+    if (
+      emojiBtn &&
+      pickerContainer &&
+      !emojiBtn.contains(e.target) &&
+      !pickerContainer.contains(e.target)
+    ) {
+      pickerContainer.style.display = "none";
+    }
+  });
+
+  // Initialize when page loads
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initEmojiPicker);
+  } else {
+    // DOM already loaded
+    initEmojiPicker();
+  }
 </script>
 {% endblock %}
