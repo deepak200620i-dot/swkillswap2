@@ -1,32 +1,62 @@
-import sqlite3
 import os
+import psycopg2
+import psycopg2.extras
+from flask import g
 
-DATABASE_PATH = 'skillswap.db'
+# Render provides DATABASE_URL automatically
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise Exception("DATABASE_URL is not set! Add it in Render → Environment.")
+
 
 def get_db():
-    """Get database connection"""
-    db = sqlite3.connect(DATABASE_PATH)
-    db.row_factory = sqlite3.Row  # Access columns by name
-    return db
+    """
+    Get a PostgreSQL connection.
+    Stored in Flask's g to reuse during request.
+    """
+    if "db" not in g:
+        g.db = psycopg2.connect(
+            DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor
+        )
+    return g.db
 
-def init_db():
-    """Initialize the database with schema"""
-    db = get_db()
-    
-    # Read and execute schema
-    schema_path = os.path.join('database', 'schema.sql')
-    with open(schema_path, 'r', encoding='utf-8') as f:
-        db.executescript(f.read())
-    
-    db.commit()
-    db.close()
-    print("Database initialized successfully!")
 
-def close_db(db):
-    """Close database connection"""
+def close_db(e=None):
+    """Close connection after request ends"""
+    db = g.pop("db", None)
     if db is not None:
         db.close()
 
-if __name__ == '__main__':
-    # Initialize database when run directly
-    init_db()
+
+def init_db():
+    """
+    Initialize database tables automatically on first startup.
+    Reads schema.sql and executes it on PostgreSQL.
+    Ignores errors if tables already exist.
+    """
+    db = get_db()
+    cur = db.cursor()
+
+    schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
+
+    with open(schema_path, "r", encoding="utf-8") as f:
+        sql_script = f.read()
+
+    try:
+        cur.execute(sql_script)
+        db.commit()
+        print("✅ PostgreSQL schema initialized (or already existed).")
+    except Exception as e:
+        print(f"⚠️ Schema initialization skipped: {e}")
+        db.rollback()
+
+
+# For CLI usage (optional)
+if __name__ == "__main__":
+    from flask import Flask
+
+    app = Flask(__name__)
+
+    with app.app_context():
+        init_db()

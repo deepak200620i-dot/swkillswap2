@@ -7,6 +7,10 @@ from routes import auth_bp, profile_bp, skills_bp, matching_bp, requests_bp, rev
 def create_app(config_name='development'):
     """Application factory"""
     app = Flask(__name__)
+    from database import init_db
+    with app.app_context():
+        init_db()
+
     app.config.from_object(config[config_name])
     # Initialize DB on start (only if tables do not exist)
     from database import init_db
