@@ -8,10 +8,10 @@ def create_app(config_name='development'):
     """Application factory"""
     app = Flask(__name__)
     app.config.from_object(config[config_name])
-    
+
     # Enable CORS
     CORS(app)
-    
+
     # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp)
@@ -21,7 +21,7 @@ def create_app(config_name='development'):
     app.register_blueprint(reviews_bp)
 
     app.register_blueprint(chat_bp)
-    
+
     from routes.notifications import notifications_bp
     app.register_blueprint(notifications_bp)
 
@@ -44,51 +44,51 @@ def create_app(config_name='development'):
         # Pass through HTTP errors
         if isinstance(e, HTTPException):
             return e
-        
+
         # non-HTTP exceptions only
         app.logger.error(f"Unhandled Exception: {e}", exc_info=True)
-        
+
         if request.path.startswith('/api/') or request.headers.get('Accept') == 'application/json':
             return jsonify({'error': 'An unexpected error occurred. Please try again later.'}), 500
         return render_template('errors/500.html'), 500
-    
+
     # Home route
     @app.route('/')
     def index():
         return render_template('index.html')
-    
+
     # Auth routes (templates)
     @app.route('/login')
     def login_page():
         return render_template('auth/login.html')
-    
+
     @app.route('/signup')
     def signup_page():
         return render_template('auth/signup.html')
-    
+
     # Dashboard route
     @app.route('/dashboard')
     def dashboard():
         return render_template('dashboard/user_dashboard.html')
-    
+
     # Profile routes
     @app.route('/profile/<int:user_id>')
     def view_profile(user_id):
         return render_template('profile/view.html')
-    
+
     @app.route('/profile/edit')
     def edit_profile():
         return render_template('profile/edit.html')
-    
+
     # Skills routes
     @app.route('/skills')
     def browse_skills():
         return render_template('skills/browse.html')
-    
+
     @app.route('/skills/search')
     def search_skills():
         return render_template('skills/search.html')
-    
+
     # Matching route
     @app.route('/matching')
     def matching():
@@ -103,31 +103,28 @@ def create_app(config_name='development'):
     @app.route('/reviews/add')
     def add_review():
         return render_template('reviews/add.html')
-    
+
     # Chat route
     @app.route('/chat')
     def chat_page():
         return render_template('chat/index.html')
-    
-    return app
 
-if __name__ == '__main__':
-    # Initialize database
+    return app
+# Global app instance for Gunicorn
+app = create_app("production")
+
+if __name__ == "__main__":
     from database import init_db
+
     try:
         init_db()
     except:
-        pass  # Database might already exist
-    
-    # Configure Logging
+        pass
+
     import logging
     import sys
-    
-    logging.basicConfig(level=logging.INFO, 
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        handlers=[logging.StreamHandler(sys.stdout)])
-    
-    # Run app
-    app = create_app()
+
+    logging.basicConfig(...)
+
     app.logger.info("Starting application...")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)
