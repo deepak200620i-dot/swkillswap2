@@ -8,7 +8,14 @@ def create_app(config_name='development'):
     """Application factory"""
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+    # Initialize DB on start (only if tables do not exist)
+    from database import init_db
 
+    with app.app_context():
+        try:
+            init_db()
+        except Exception as e:
+            app.logger.error(f"DB init error: {e}")
     # Enable CORS
     CORS(app)
 
