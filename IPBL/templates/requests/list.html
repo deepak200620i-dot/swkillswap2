@@ -230,10 +230,10 @@
     } else if (req.status === "accepted") {
       return `
                 <button class="btn btn-sm btn-info text-white flex-grow-1" onclick="updateStatus(${req.id}, 'completed')">Mark Completed</button>
-                <a href="mailto:?subject=Skill Swap&body=Let's connect!" class="btn btn-sm btn-outline-primary flex-grow-1">Email</a>
+                <a href="mailto:%ssubject=Skill Swap&body=Let's connect!" class="btn btn-sm btn-outline-primary flex-grow-1">Email</a>
             `;
     } else if (req.status === "completed") {
-      return `<a href="/reviews/add?request_id=${req.id}" class="btn btn-sm btn-outline-warning flex-grow-1">Leave Review</a>`;
+      return `<a href="/reviews/add%srequest_id=${req.id}" class="btn btn-sm btn-outline-warning flex-grow-1">Leave Review</a>`;
     }
     return "";
   }
@@ -242,10 +242,10 @@
     if (req.status === "accepted") {
       return `
                 <button class="btn btn-sm btn-info text-white flex-grow-1" onclick="updateStatus(${req.id}, 'completed')">Mark Completed</button>
-                <a href="mailto:?subject=Skill Swap&body=Let's connect!" class="btn btn-sm btn-outline-primary flex-grow-1">Email</a>
+                <a href="mailto:%ssubject=Skill Swap&body=Let's connect!" class="btn btn-sm btn-outline-primary flex-grow-1">Email</a>
             `;
     } else if (req.status === "completed") {
-      return `<a href="/reviews/add?request_id=${req.id}" class="btn btn-sm btn-outline-warning flex-grow-1">Leave Review</a>`;
+      return `<a href="/reviews/add%srequest_id=${req.id}" class="btn btn-sm btn-outline-warning flex-grow-1">Leave Review</a>`;
     }
     return "";
   }
