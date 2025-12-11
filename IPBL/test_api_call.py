@@ -1,5 +1,5 @@
 import json
-from app import create_app
+from application import create_app
 from utils import generate_token
 from database import get_db
 

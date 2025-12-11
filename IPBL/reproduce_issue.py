@@ -2,7 +2,7 @@ import os
 import io
 import json
 import sys
-from app import create_app
+from application import create_app
 from database import init_db, get_db
 
 # Setup

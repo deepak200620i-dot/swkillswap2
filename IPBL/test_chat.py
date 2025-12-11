@@ -1,6 +1,6 @@
 import unittest
 import json
-from app import create_app
+from application import create_app
 from database import init_db, get_db
 from utils.encryption import encrypt_message, decrypt_message
 
