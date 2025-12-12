@@ -168,7 +168,7 @@ def search_by_name():
             """
             SELECT 
                 u.id, u.full_name, u.bio, u.profile_picture, u.location, u.availability,
-                (SELECT GROUP_CONCAT(s.name, ', ') 
+                (SELECT STRING_AGG(s.name, ', ') 
                  FROM user_skills us2 
                  JOIN skills s ON us2.skill_id = s.id 
                  WHERE us2.user_id = u.id AND us2.is_teaching = TRUE) as teaching_skills
