@@ -9,7 +9,10 @@ CREATE TABLE IF NOT EXISTS users (
     location TEXT,
     availability TEXT,
     created_at TIMESTAMP DEFAULT NOW(),
-    is_admin BOOLEAN DEFAULT FALSE
+    is_admin BOOLEAN DEFAULT FALSE,
+    email_verified BOOLEAN DEFAULT FALSE,
+    email_otp VARCHAR(10),
+    otp_created_at TIMESTAMP
 );
 
 -- SKILLS

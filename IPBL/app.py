@@ -1,8 +1,12 @@
 from flask import Flask, render_template, request, jsonify
 from werkzeug.exceptions import HTTPException
 from flask_cors import CORS
+from flask_mail import Mail
 from config import config
 from routes import auth_bp, profile_bp, skills_bp, matching_bp, requests_bp, reviews_bp, chat_bp
+
+# Initialize Flask-Mail
+mail = Mail()
 
 def create_app(config_name='development'):
     """Application factory"""
@@ -20,6 +24,10 @@ def create_app(config_name='development'):
             init_db()
         except Exception as e:
             app.logger.error(f"DB init error: {e}")
+    
+    # Initialize Flask-Mail
+    mail.init_app(app)
+    
     # Enable CORS
     CORS(app)
 
