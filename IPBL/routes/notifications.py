@@ -23,7 +23,7 @@ def check_notifications(current_user):
             JOIN conversations c ON m.conversation_id = c.id
             WHERE (c.user1_id = %s OR c.user2_id = %s)
             AND m.sender_id != %s
-            AND m.is_read = 0
+            AND m.is_read = FALSE
         """,
             (user_id, user_id, user_id),
         ).fetchone()["count"]
@@ -49,7 +49,7 @@ def check_notifications(current_user):
                 JOIN users u ON m.sender_id = u.id
                 WHERE (c.user1_id = %s OR c.user2_id = %s)
                 AND m.sender_id != %s
-                AND m.is_read = 0
+                AND m.is_read = FALSE
                 ORDER BY m.created_at DESC
                 LIMIT 1
             """,

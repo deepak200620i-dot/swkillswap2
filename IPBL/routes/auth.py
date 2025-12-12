@@ -64,11 +64,11 @@ def signup():
 
         # Insert new user
         cursor = db.execute(
-            "INSERT INTO users (email, password_hash, full_name, profile_picture) VALUES (%s, %s, %s, %s)",
+            "INSERT INTO users (email, password_hash, full_name, profile_picture) VALUES (%s, %s, %s, %s) RETURNING id",
             (email, password_hash, full_name, default_pic),
         )
+        user_id = cursor.fetchone()["id"]
         db.commit()
-        user_id = cursor.lastrowid
 
         # Generate token
         token = generate_token(user_id, email)
