@@ -26,7 +26,7 @@ def get_profile(user_id):
             SELECT s.id, s.name, s.category, us.proficiency_level
             FROM skills s
             JOIN user_skills us ON s.id = us.skill_id
-            WHERE us.user_id = %s AND us.is_teaching = 1
+            WHERE us.user_id = %s AND us.is_teaching = TRUE
         """,
             (user_id,),
         ).fetchall()
@@ -37,7 +37,7 @@ def get_profile(user_id):
             SELECT s.id, s.name, s.category, us.proficiency_level
             FROM skills s
             JOIN user_skills us ON s.id = us.skill_id
-            WHERE us.user_id = %s AND us.is_learning = 1
+            WHERE us.user_id = %s AND us.is_learning = TRUE
         """,
             (user_id,),
         ).fetchall()

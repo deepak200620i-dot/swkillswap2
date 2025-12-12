@@ -26,7 +26,7 @@ def find_teachers():
             FROM users u
             JOIN user_skills us ON u.id = us.user_id
             JOIN skills s ON us.skill_id = s.id
-            WHERE us.skill_id = %s AND us.is_teaching = 1
+            WHERE us.skill_id = %s AND us.is_teaching = TRUE
             ORDER BY us.proficiency_level DESC, u.full_name
         """,
             (skill_id,),
@@ -68,7 +68,7 @@ def find_learners():
             FROM users u
             JOIN user_skills us ON u.id = us.user_id
             JOIN skills s ON us.skill_id = s.id
-            WHERE us.skill_id = %s AND us.is_learning = 1
+            WHERE us.skill_id = %s AND us.is_learning = TRUE
             ORDER BY u.full_name
         """,
             (skill_id,),
@@ -104,7 +104,7 @@ def get_recommendations():
             learning_skills = db.execute(
                 """
                 SELECT skill_id FROM user_skills
-                WHERE user_id = %s AND is_learning = 1
+                WHERE user_id = %s AND is_learning = TRUE
             """,
                 (user_id,),
             ).fetchall()
@@ -126,7 +126,7 @@ def get_recommendations():
                 JOIN user_skills us ON u.id = us.user_id
                 JOIN skills s ON us.skill_id = s.id
                 WHERE us.skill_id IN ({placeholders})
-                AND us.is_teaching = 1
+                AND us.is_teaching = TRUE
                 AND u.id != %s
                 ORDER BY us.proficiency_level DESC, u.full_name
                 LIMIT 20
@@ -171,7 +171,7 @@ def search_by_name():
                 (SELECT GROUP_CONCAT(s.name, ', ') 
                  FROM user_skills us2 
                  JOIN skills s ON us2.skill_id = s.id 
-                 WHERE us2.user_id = u.id AND us2.is_teaching = 1) as teaching_skills
+                 WHERE us2.user_id = u.id AND us2.is_teaching = TRUE) as teaching_skills
             FROM users u
             WHERE u.full_name LIKE %s
             ORDER BY u.full_name
